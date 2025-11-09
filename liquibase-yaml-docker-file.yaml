@@ -1,0 +1,28 @@
+# 1. Base Image: Use the official Liquibase image
+FROM liquibase/liquibase:4.33.0
+  
+  # 2. Set Working Directory: This defines the default directory for instructions like COPY and CMD/ENTRYPOINT.
+  # This directly replicates the 'working_dir: /liquibase/changelog' from your compose file.
+WORKDIR /liquibase/changelog
+  
+  # 3. Volume Mounting (Setup): The COPY instruction below handles placing your changelogs into the image,
+  # which mimics the purpose of the volume mount in a build context.
+  # Assuming your changelog files are located in './src/main/resources/liquibase' relative to this Dockerfile.
+  # This makes the files available at the WORKDIR path inside the container.
+COPY ./src/main/resources/db/changelog .
+  
+  # 4. Set the Default Command: This defines the command that runs when the container starts.
+  # We use a shell-form CMD to allow easy variable substitution.
+  # NOTE: The database connection details will need to be passed as environment variables 
+  # during 'docker run' (or 'docker-compose up' if you switch back to compose) 
+  # since hardcoding secrets in a Dockerfile is strongly discouraged.
+  
+  # Use CMD to define the default operation. 
+  # We'll rely on environment variables (passed at runtime) for the sensitive parts.
+  # The command structure is broken up for readability but executed as one line.
+CMD liquibase \
+--url=${DB_URL} \
+--username=${DB_USER} \
+--password=${DB_PASSWORD} \
+--changeLogFile=changelog-master.yaml \
+${COMMAND}

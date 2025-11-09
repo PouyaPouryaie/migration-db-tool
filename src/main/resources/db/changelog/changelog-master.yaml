@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - include:
+      file: "changesets/2025-10/master.yaml"
+      relativeToChangelogFile: true
+  - changeSet:
+      id: tag-v1.0
+      author: pouya
+      changes:
+        - tagDatabase:
+            tag: v1.0
+  - include:
+      file: "changesets/2025-11/master.yaml"
+      relativeToChangelogFile: true

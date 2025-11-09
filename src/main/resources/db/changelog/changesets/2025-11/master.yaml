@@ -1,0 +1,4 @@
+databaseChangeLog:
+  - include:
+      file: "add-data-to-customer-table.sql"
+      relativeToChangelogFile: true
