@@ -1,3 +1,10 @@
 spring:
   application:
     name: migration-tool
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: "jdbc:postgresql://localhost:5432/migration_tool"
+    username: postgres
+    password: postgres
+  jpa:
+    database: PostgreSQL

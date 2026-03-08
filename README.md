@@ -84,6 +84,94 @@ database without starting the Spring Boot application.
 | history |   Displays all changesets already applied to the database.    | `./mvnw liquibase:history`                        |
 
 
+## Running with Docker
+
+There are two approaches to running Liquibase using Docker. Choose the one that best fits your workflow.
+
+### Approach 1: Custom Wrapper (Manual Command Injection)
+
+This approach uses a custom `Dockerfile` where the Liquibase command is treated as a generic environment variable (`COMMAND`). This is useful if you want to bake specific shell logic or pre-processing into your image.
+
+**1. Build the image:**
+
+```bash
+docker build -t my-liquibase:latest -f liquibase-xml-docker-file.yaml .
+
+```
+
+**2. Run the migration:**
+
+> **Note:** Replace the IP address with your database instance IP (e.g., `172.17.0.1` for the Docker host).
+
+```bash
+docker run --rm --network bridge \
+  -v $(pwd)/src/main/resources/liquibase-xml:/liquibase/changelog \
+  --env DB_URL="jdbc:postgresql://172.17.0.1:5432/migration_tool" \
+  --env DB_USER="postgres" \
+  --env DB_PASSWORD="postgres" \
+  --env COMMAND="status" \
+  my-liquibase:latest
+
+```
+
+---
+
+### Approach 2: Native Liquibase Environment Variables (Recommended)
+
+This approach leverages the built-in configuration engine of the official Liquibase image. It follows the **"Environment over Configuration"** pattern, making your `Dockerfile` significantly simpler and avoiding shell parsing errors.
+
+**1. Build the image:**
+
+```bash
+docker build -t my-liquibase:latest -f liquibase-yaml-docker-file.yaml .
+
+```
+
+**2. Run the migration:**
+In this mode, you pass specific `LIQUIBASE_` variables. The final argument in the command (`status`, `update`, `rollback`, etc.) tells Liquibase exactly what action to perform.
+
+```bash
+docker run --rm --network bridge \
+  -v $(pwd)/src/main/resources/liquibase-xml:/liquibase/changelog \
+  --env LIQUIBASE_COMMAND_URL="jdbc:postgresql://172.17.0.1:5432/migration_tool" \
+  --env LIQUIBASE_COMMAND_USERNAME="postgres" \
+  --env LIQUIBASE_COMMAND_PASSWORD="postgres" \
+  --env LIQUIBASE_COMMAND_CHANGELOG_FILE="changelog-master.xml" \
+  my-liquibase:latest \
+  status
+
+```
+
+#### Key Variables Explained:
+
+| Variable | Description |
+| --- | --- |
+| `LIQUIBASE_COMMAND_URL` | The JDBC connection string for your database. |
+| `LIQUIBASE_COMMAND_CHANGELOG_FILE` | The path to your root changelog file inside the container. |
+| `status` / `update` | The Liquibase command to execute (passed as the container's `CMD`). |
+
+---
+
+### 💡 Pro-Tip: Docker Networking
+
+If you are running your database in a separate Docker container, using the default `bridge` network requires you to use the Host IP (e.g., `172.17.0.1`).
+
+For a more stable setup, create a **user-defined network**. This allows you to connect using the container name (e.g., `postgres`) instead of an IP address:
+
+```bash
+# 1. Create a network
+docker network create liquibase-net
+
+# 2. Run your DB on that network
+docker run -d --name postgres --network liquibase-net -e POSTGRES_PASSWORD=password postgres
+
+# 3. Run Liquibase using the name 'postgres'
+docker run --rm --network liquibase-net \
+  --env LIQUIBASE_COMMAND_URL="jdbc:postgresql://postgres:5432/migration_tool" \
+  ...
+
+```
+---
 ## 📝 License
 
 This project is licensed under the MIT License. Feel free to copy and adapt the configuration for your own projects!
