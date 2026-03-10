@@ -5,6 +5,7 @@ databaseChangeLog:
   - changeSet:
       id: tag-v1.0
       author: pouya
+      labels: release-2025/01/01
       changes:
         - tagDatabase:
             tag: v1.0

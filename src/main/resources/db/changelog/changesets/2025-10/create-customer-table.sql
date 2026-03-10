@@ -1,6 +1,6 @@
 -- liquibase formatted sql
 
--- changeset pouya:0
+-- changeset pouya:0 labels:create,customer
 CREATE TABLE customer (
    id serial PRIMARY KEY,
    name varchar(255) NOT NULL,
