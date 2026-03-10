@@ -132,11 +132,11 @@ In this mode, you pass specific `LIQUIBASE_` variables. The final argument in th
 
 ```bash
 docker run --rm --network bridge \
-  -v $(pwd)/src/main/resources/liquibase-xml:/liquibase/changelog \
+  -v $(pwd)/src/main/resources/db/changelog:/liquibase/changelog \
   --env LIQUIBASE_COMMAND_URL="jdbc:postgresql://172.17.0.1:5432/migration_tool" \
   --env LIQUIBASE_COMMAND_USERNAME="postgres" \
   --env LIQUIBASE_COMMAND_PASSWORD="postgres" \
-  --env LIQUIBASE_COMMAND_CHANGELOG_FILE="changelog-master.xml" \
+  --env LIQUIBASE_COMMAND_CHANGELOG_FILE="changelog-master.yaml" \
   my-liquibase:latest \
   status
 
@@ -151,6 +151,66 @@ docker run --rm --network bridge \
 | `status` / `update` | The Liquibase command to execute (passed as the container's `CMD`). |
 
 ---
+
+Adding an option for a `liquibase.properties` file is a great way to make the tool "plug-and-play" for local developers. This allows them to configure their database once and run the container without typing long strings of environment variables.
+
+Here is the section you can add to your **README.md**:
+
+---
+
+### Approach 3: Using a Local Properties File
+
+For local development, you can store your configuration in a `liquibase.properties` file. This is the most convenient method as it avoids long terminal commands and keeps your configuration organized.
+
+**1. Create a `liquibase.properties` file** in your project root or at a specific directory like `resoureces/db/local/liquibase-local.properties`:
+
+```properties
+# Connection Details
+url=jdbc:postgresql://172.17.0.1:5432/migration_tool
+username=postgres
+password=postgres
+
+# Changelog Configuration
+changeLogFile=changelog-master.yaml
+
+```
+
+**2. Run the migration:**
+We mount the properties file directly into the `/liquibase/changelog` directory. Liquibase automatically detects and uses it.
+Note: We mount the file directly into the `/liquibase/changelog directory` (the WORKDIR). By using `--defaultsFile`, we ensure Liquibase loads these settings before executing the status command.
+
+```bash
+docker run --rm \
+  --network bridge \
+  -v $(pwd)/src/main/resources/db/changelog:/liquibase/changelog \
+  -v $(pwd)/src/main/resources/db/local:/liquibase/config \
+  my-liquibase:latest \
+  --defaultsFile=/liquibase/config/liquibase-local.properties \
+  status
+
+```
+
+#### Why use this approach?
+
+* **Simplicity:** You only need to type the command (e.g., `status`, `update`) at the end of the Docker string.
+* **Consistency:** All team members can use the same property keys, changing only the values specific to their local setup.
+* **Overrides:** You can still override any property in the file by passing an environment variable in the `docker run` command.
+
+> **⚠️ Security Note:** Ensure `liquibase.properties` is added to your `.gitignore` file to prevent sensitive database credentials from being committed to version control.
+
+---
+
+### Summary Table: Which approach to use?
+
+| Method | Best For... | Key Benefit |
+| --- | --- | --- |
+| **Approach 1 (CMD)** | Custom logic | Useful for specific shell-scripting needs. |
+| **Approach 2 (Env Vars)** | CI/CD Pipelines | Best for automation and secure secret injection. |
+| **Approach 3 (Properties)** | Local Dev | Cleanest terminal commands for daily development. |
+
+---
+
+**Would you like me to create a "Troubleshooting" section for your README to cover common errors like the "relation does not exist" issue we solved earlier?**
 
 ### 💡 Pro-Tip: Docker Networking
 
