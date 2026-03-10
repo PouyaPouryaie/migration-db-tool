@@ -76,13 +76,40 @@ CREATE TABLE example_table (
 Because this project is configured with the Liquibase Maven plugin, you can run commands directly against your target <br>
 database without starting the Spring Boot application.
 
-| Command|                              Description                               | Example                                                                        |
-| :--- |:----------------------------------------------------------------------:|:-------------------------------------------------------------------------------|
-| update | Applies any changesets not yet present in the DATABASECHANGELOG table. | `./mvnw liquibase:update`                                                      |
-| status |   Shows a list of pending changesets that have not yet been applied.   | `./mvnw liquibase:status`                                                      |
-| rollback |    Reverts changes based on a tag or count. WARNING: Use with care!    | `./mvnw liquibase:rollback -Dliquibase.rollbackCount=1` (Undo the last change) |
-| history |   Displays all changesets already applied to the database.    | `./mvnw liquibase:history`                        |
+| Command|                              Description                               | Example                                                                                                                                     |
+| :--- |:----------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------|
+| update | Applies any changesets not yet present in the DATABASECHANGELOG table. | `./mvnw liquibase:update`                                                                                                                   |
+| status |   Shows a list of pending changesets that have not yet been applied.   | `./mvnw liquibase:status`                                                                                                                   |
+| rollback |    Reverts changes based on a tag or count. WARNING: Use with care!    | `./mvnw liquibase:rollback -Dliquibase.rollbackCount=1` (Undo the last change) or `./mvnw liquibase:rollback v1.0` (Undo to a specific tag) |
+| history |   Displays all changesets already applied to the database.    | `./mvnw liquibase:history`                                                                                                                  |
 
+
+#### Deploying to a Specific Version (update-to-tag)
+
+If your changelog contains multiple versions, but you only want to deploy up to a specific milestone (e.g., for a Production release while Development continues), use update-to-tag.
+
+<b>Command:
+```Bash
+
+# Syntax: ./run-liquibase.sh update-to-tag <tag_name>
+./run-liquibase.sh update-to-tag v1.0
+```
+
+How it works:
+- Liquibase reads the changelog-master.yaml.
+- It executes all pending changesets until it reaches the changeset containing tag: v1.0.
+- It stops there. Any changesets defined below that tag remain "pending" and are not executed.
+
+
+### 🛡️ Safety Testing
+
+Before deploying to production, it is recommended to run a "Test Rollback" to ensure all changes are reversible.
+```Bash
+
+./run-liquibase.sh update-testing-rollback
+```
+
+This command performs an update, followed by a rollback, and a final update. If this command succeeds, it guarantees that your migration scripts are fully reversible.
 
 ## Running with Docker
 
