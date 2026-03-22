@@ -1,4 +1,12 @@
 databaseChangeLog:
-  - include:
-      file: "add-data-to-customer-table.sql"
-      relativeToChangelogFile: true
+  - changeSet:
+        id: add-customer-data
+        author: pouya
+        preConditions:
+          - onFail: HALT
+            tableExists:
+              tableName: customer
+        changes:
+          - sqlFile:
+              path: "add-data-to-customer-table.sql"
+              relativeToChangelogFile: true

@@ -79,12 +79,12 @@ CREATE TABLE example_table (
 
 For manual database management, we use the official Liquibase Docker image. We mount the parent `db` folder to `/liquibase/db` inside the container so it can access both your properties and your changelogs.
 
-| Command | Description | Docker Example |
-| :--- | :--- | :--- |
-| **status** | Check for pending changes. | `docker run --rm -v $(pwd)/src/main/resources/db:/liquibase/db my-liquibase:latest --defaultsFile=/liquibase/db/local/liquibase-local.properties status` |
-| **update** | Apply all migrations. | `docker run --rm -v $(pwd)/src/main/resources/db:/liquibase/db my-liquibase:latest --defaultsFile=/liquibase/db/local/liquibase-local.properties update` |
-| **rollback** | Undo the last change. | `docker run --rm -v $(pwd)/src/main/resources/db:/liquibase/db my-liquibase:latest --defaultsFile=/liquibase/db/local/liquibase-local.properties rollback --rollbackCount=1` |
-| **history** | View the migration log. | `docker run --rm -v $(pwd)/src/main/resources/db:/liquibase/db my-liquibase:latest --defaultsFile=/liquibase/db/local/liquibase-local.properties history` |
+| Command | Description | Docker Example                                                                                                                                                                          |
+| :--- | :--- |:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **status** | Check for pending changes. | `docker run --rm -v $(pwd)/src/main/resources/db:/liquibase/db my-liquibase:latest --defaultsFile=/liquibase/db/local/liquibase-local.properties status`                                |
+| **update** | Apply all migrations. | `docker run --rm -v $(pwd)/src/main/resources/db:/liquibase/db my-liquibase:latest --defaultsFile=/liquibase/db/local/liquibase-local.properties update`                                |
+| **rollback** | Undo the last change. | `docker run --rm -v $(pwd)/src/main/resources/db:/liquibase/db my-liquibase:latest --defaultsFile=/liquibase/db/local/liquibase-local.properties rollback --tag=v1.0` |
+| **history** | View the migration log. | `docker run --rm -v $(pwd)/src/main/resources/db:/liquibase/db my-liquibase:latest --defaultsFile=/liquibase/db/local/liquibase-local.properties history`                               |
 
 
 ### Deploying to a Specific Version (`update-to-tag`)
