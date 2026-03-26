@@ -1,4 +1,13 @@
 databaseChangeLog:
-  - include:
-      file: "create-customer-table.sql"
-      relativeToChangelogFile: true
+  - changeSet:
+      id: create-customer-table
+      author: pouya
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: customer
+      changes:
+        - sqlFile:
+            path: "create-customer-table.sql"
+            relativeToChangelogFile: true

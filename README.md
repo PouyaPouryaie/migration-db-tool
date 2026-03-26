@@ -114,6 +114,93 @@ Before production deployment, run a "Test Rollback":
 
 ---
 
+To keep your README consistent with the professional and developer-friendly tone of your blog post, we should add an **"Advanced Schema Control"** section. This section will bridge the gap between simple migrations and production-grade safety.
+
+Here is the markdown block you can insert before the **"Docker"** section:
+
+---
+
+## 🚀 Advanced Schema Control
+
+As your project grows, "simple" migrations aren't enough. Liquibase provides tools to ensure your scripts are safe, environment-aware, and database-compatible.
+
+### 1. Preconditions: Safety First
+Preconditions allow you to verify the state of the database *before* a changeset runs. This prevents common errors like trying to create a table that already exists.
+
+```yaml
+databaseChangeLog:
+  - changeSet:
+      id: secure-customer-update
+      author: pouya
+      preConditions:
+        - onFail: MARK_RAN   # If the check fails, skip and mark as finished
+        - onError: HALT      # If there is a syntax error, stop everything
+        - not:
+            tableExists:
+              tableName: customer
+      changes:
+        - sqlFile: 
+            path: "create-customer.sql"
+```
+
+* **`onFail`**: Triggered when the condition is false (e.g., table already exists).
+    * `HALT`: Stops the entire migration.
+    * `MARK_RAN`: Skips the changeset but records it as "executed."
+    * `CONTINUE`: Skips it but doesn't record it (will try again next time).
+* **`onError`**: Triggered when a technical error occurs (e.g., invalid SQL syntax in the check).
+* **More info:** For a full list of checks (like `columnExists`, `sqlCheck`, or `indexExists`), see the [Official Liquibase Preconditions Doc](https://docs.liquibase.com/concepts/changelogs/preconditions.html).
+
+### 2. Multi-DBMS Support
+If your team uses **PostgreSQL** for production but **H2** for local integration tests, you can use the `dbms` attribute to ensure scripts only run on the correct engine.
+
+```yaml
+  - changeSet:
+      id: postgres-specific-optimization
+      author: pouya
+      dbms: postgresql  # This changeset will be ignored if running on H2 or Oracle
+      changes:
+        - sql:
+            sql: "CREATE INDEX idx_cust_json ON customer USING gin (data);"
+```
+
+or on the SQL scripts
+```sql
+-- changeset pouya:0 dbms:postgresql
+CREATE TABLE customer (
+   id serial PRIMARY KEY,
+   name varchar(255) NOT NULL,
+   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 3. Contexts: Environment-Aware Migrations
+Contexts allow you to "tag" changesets for specific environments. A classic use case is loading **Test Data** only in local or dev environments.
+
+**In the Changelog:**
+```yaml
+  - changeSet:
+      id: load-dev-data
+      author: pouya
+      context: local or dev
+      changes:
+        - insert:
+            tableName: customer
+            columns:
+              - column: {name: "name", value: "Demo User"}
+```
+
+**How to Execute:**
+You must pass the context at runtime. If no context is passed, all changesets (including those with no context defined) will run.
+- Via Docker/CLI:
+`liquibase --contexts=local update`
+
+- Via Spring Boot (application.yml):
+```YAML
+    spring:
+      liquibase:
+        contexts: prod
+ ```
+
 ## 🐳 Running with Docker
 
 Choose the approach that fits your workflow.

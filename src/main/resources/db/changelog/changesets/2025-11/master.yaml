@@ -1,12 +1,14 @@
 databaseChangeLog:
   - changeSet:
-        id: add-customer-data
-        author: pouya
-        preConditions:
-          - onFail: HALT
-            tableExists:
-              tableName: customer
-        changes:
-          - sqlFile:
-              path: "add-data-to-customer-table.sql"
-              relativeToChangelogFile: true
+      id: add-customer-data
+      author: pouya
+      preConditions:
+        - onFail: MARK_RAN    # If count > 0, skip! (Logic failure)
+        - onError: HALT   # If the table is missing or SQL is broken, stop! (Technical failure)
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM customer
+      changes:
+        - sqlFile:
+            path: "add-data-to-customer-table.sql"
+            relativeToChangelogFile: true
