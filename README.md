@@ -174,9 +174,22 @@ CREATE TABLE customer (
 ```
 
 ### 3. Contexts: Environment-Aware Migrations
-Contexts allow you to "tag" changesets for specific environments. A classic use case is loading **Test Data** only in local or dev environments.
+Contexts allow you to "tag" changesets so they only run in specific environments. In this project, we use them to separate core schema from environment-specific data.
 
-**In the Changelog:**
+**How the filtering works:**
+* **Matched Context:** If you run with `--contexts=prod`, only changesets marked `context: prod` will run.
+* **Mismatched Context:** Changesets marked `context: dev` will be **ignored** during a `prod` run.
+* **Global Changesets:** Any changeset **without** a context attribute is considered "Global." These will run in **every** environment, regardless of your runtime settings.
+
+| Changeset Attribute | Running with `--contexts=prod` | Running with `--contexts=dev` |
+| :--- | :--- | :--- |
+| `context: prod` | ✅ Runs | ❌ Skipped |
+| `context: dev` | ❌ Skipped | ✅ Runs |
+| *(No context)* | ✅ Runs (Global) | ✅ Runs (Global) |
+
+> **Pro-Tip:** Use contexts for loading "Mock Data" or "Test Users" in your local environment without risking that data reaching your Production database.
+
+**Sample In the Changelog:**
 ```yaml
   - changeSet:
       id: load-dev-data
