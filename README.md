@@ -284,6 +284,38 @@ docker run -d --name postgres --network liquibase-net -e POSTGRES_PASSWORD=passw
 docker run --rm --network liquibase-net --env LIQUIBASE_COMMAND_URL="jdbc:postgresql://postgres:5432/migration_tool" ...
 ```
 
+### Enable structured logging (Paid Version)
+[Reference document](https://docs.liquibase.com/secure/user-guide-5-1/enable-structured-logging)
+
+#### Step 1: Update your properties file
+```yaml
+# log Config
+liquibase.logFormat=JSON
+liquibase.logLevel=INFO
+# Point this to an absolute path inside the container
+liquibase.logFile=/liquibase/logs/liquibase-structured.log
+```
+- LogLevel: OFF -> SEVERE -> WARING -> INFO -> FINE
+
+#### Step 2: Run the Docker command
+```bash
+docker run --rm \
+  -v $(pwd)/src/main/resources/db:/liquibase/db \
+  -v $(pwd)/logs:/liquibase/logs \
+  my-liquibase:latest --defaultsFile=/liquibase/db/local/liquibase-local.properties update
+```
+
+#### Step 2.1: alternative Use Docker to capture the logs into a file
+
+comment out `liquibase.logFile=/liquibase/logs/liquibase-structured.log` from `properties` file
+
+Run below command
+```bash
+docker run --rm \
+  -v $(pwd)/src/main/resources/db:/liquibase/db \
+  my-liquibase:latest --defaultsFile=/liquibase/db/local/liquibase-local.properties update &> $(pwd)/logs/liquibase-structured.log
+```
+
 ---
 
 ## 📝 License
